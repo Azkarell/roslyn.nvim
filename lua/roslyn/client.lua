@@ -87,7 +87,7 @@ function M.spawn(cmd, target, settings, on_exit, on_attach, capabilities)
 	-- })
 
 	local spawned = RoslynClient.new(target)
-
+	vim.inspect(vim.print(vim.lsp.handlers))
 	---@diagnostic disable-next-line: missing-fields
 	spawned.id = vim.lsp.start_client({
 		name = "roslyn",
@@ -130,14 +130,15 @@ function M.spawn(cmd, target, settings, on_exit, on_attach, capabilities)
 			[vim.lsp.protocol.Methods.client_registerCapability] = hacks.with_filtered_watchers(
 				vim.lsp.handlers[vim.lsp.protocol.Methods.client_registerCapability]
 			),
+			[vim.lsp.protocol.Methods.textDocument_didOpen] = vim.lsp.handlers[vim.lsp.protocol.Methods.textDocument_didOpen],
 			["workspace/projectInitializationComplete"] = function()
 				vim.notify("Roslyn project initialization complete", vim.log.levels.INFO)
 				spawned:initialize()
 			end,
-            ["workspace/_roslyn_projectHasUnresolvedDependencies"] = function()
-                vim.notify("Detected missing dependencies. Run dotnet restore command.", vim.log.levels.ERROR)
-                return vim.NIL
-            end,
+			["workspace/_roslyn_projectHasUnresolvedDependencies"] = function()
+				vim.notify("Detected missing dependencies. Run dotnet restore command.", vim.log.levels.ERROR)
+				return vim.NIL
+			end,
 		},
 		on_exit = on_exit,
 	})
